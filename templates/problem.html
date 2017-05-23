@@ -1,0 +1,42 @@
+{% extends "base_list.html" %}
+
+{% block title %}Problem List{% endblock %}
+
+{% block navbar %}{% include "include/navbar-problem.html" %}{% endblock %}
+
+{% block list %}
+<col width="10%" />
+<col width="40%" />
+<col width="18%" />
+<col width="12%" />
+<col width="20%" />
+<tr>
+    <th><center>ID</center></th>
+    <th><center>Title</center></th>
+    <th><center>Accepted/Submit</center></th>
+    <th><center>Author</center></th>
+    <th><center>Upload</center></th>
+</tr>
+{% for item in list %}
+<tr>
+    {%if item.proid in aclst%}
+	<th><center><font color="#008000">{{item.proid}}</font></center></th>
+    {%elif item.proid in trylst%}
+	<th><center><font color="#FFA500">{{item.proid}}</font></center></th>
+    {%else%}
+	<th><center>{{item.proid}}</center></th>
+    {%endif%}
+    <th><center><a href="/problem/{{ item.proid }}">{{ item.title }}</a></center></th>
+    <th><center><a href="/status?pid={{ item.proid }}">{{ item.accepted }}/{{ item.submitted }}</a></center></th>
+    <th><center>{{ item.originoj }}</center></th>
+    <th><center>{{ item.updatetime | date:"Y-m-d" }}</center></th>
+</tr>
+{% endfor %}
+{% endblock %}
+{% block page %}
+    <ul class="pagination">
+        {% for id in page %}
+        <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}" href="/problem?pg={{ id }}">{{ id }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

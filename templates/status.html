@@ -1,0 +1,66 @@
+{% extends "status/status_list.html" %}
+
+{% block title %}Status{% endblock %}
+
+{% block navbar %}{% include "include/navbar-status.html" %}{% endblock %}
+
+{% block list %}
+    <tr>
+        <th><center>RunID</center></th>
+        <th><center>Problem</center></th>
+        <th><center>Status/Score</center></th>
+        <th><center>Language</center></th>
+        <th><center>Time</center></th>
+        <th><center>Memory</center></th>
+        <th><center>User</center></th>
+        <th><center>SubmitTime</center></th>
+    </tr>
+    {% for item in list %}
+        <tr
+                {% ifequal item.status 1 %}
+                    class="info"
+                {% endifequal %}
+                {% ifequal item.status 0 %}
+                    class="success"
+                {% else %}
+                    class="danger"
+                {% endifequal %}
+         >
+	    <td><center>{{ item.runid }}</a></center></td>
+            <td><center><a href="/problem/{{ item.pro.proid}}">{{ item.pro.title }}</a></center></td>
+            {% ifequal item.pid.isCCF True %}
+                 <td><center>{{ item.score }}</center></td>
+	    {% else %}
+		{% ifequal item.result "Compilation Error" %}
+		    {% ifequal item.uid.id user.id %}
+			    <td><center><a href="/show_source?solution_id={{ item.runid }}" target="_blank">{{ item.get_status_display }}</a></center></td>
+		    {% else %}
+			    <td><center>{{ item.result }}</center></td>
+		    {% endifequal %}
+                {% else %}
+		    <td><center>{{ item.result }}</center></td>
+                {% endifequal %}
+            {% endifequal %}
+	    {% ifequal item.uid.id user.id %}
+		    <td><center><a href="/show_source?solution_id={{ item.runid }}" target="_blank">{{ item.lang }}</a></center></td>
+	    {% else %}
+		    {% ifequal user.is_staff True%}
+			    <td><center><a href="/show_source?solution_id={{ item.runid }}" target="_blank">{{ item.lang }}</a></center></td>
+		    {% else %}
+			    <td><center>{{ item.lang }}</center></td>
+		    {% endifequal %}
+	    {% endifequal %}
+            <td><center>{{ item.timec }}ms</center></td>
+            <td><center>{{ item.memoryc }}KB</center></td>
+            <td><center>{{ item.user.username }}</center></td>
+            <td><center>{{ item.time | date:"Y-m-d H:i:s" }}</center></td>
+        </tr>
+    {% endfor %}
+{% endblock %}
+{% block page %}
+    <ul class="pagination">
+        {% for id in page %}
+        <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}" href="">{{ id }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}
