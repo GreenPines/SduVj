@@ -17,10 +17,10 @@
     </tr>
     {% for item in list %}
         <tr
-                {% ifequal item.status 1 %}
+                {% ifequal item.result 'Waiting' %}
                     class="info"
                 {% endifequal %}
-                {% ifequal item.status 0 %}
+                {% ifequal item.result 'Accepted' %}
                     class="success"
                 {% else %}
                     class="danger"
