@@ -18,9 +18,22 @@ import re
 import json
 import pymysql
 import time
+import base64
 
 LIST_NUMBER_EVERY_PAGE = 20
 PAGE_NUMBER_EVERY_PAGE = 7
+
+LANG_DICT = {0: 'G++', 1: 'GCC', 2: 'C++', 3: 'C', 4: 'Pascal', 5: 'Java', 6: 'C#', 7: 'Python'}
+LANGUAGE = {
+        'G++' : '0',
+        'GCC' : '1',
+        'C++' : '2',
+        'C' : '3',
+        'Pascal' : '4',
+        'Java' : '5',
+        'C#' : '6',
+        'Python' : '7',
+        }
 
 def ren2res(template, req, dict={}):
     if req.user.is_authenticated():
@@ -96,7 +109,8 @@ def register(req):
                 newuser.username = username
                 newuser.email = email
                 newuser.set_password(pw1)
-                newuser.is_staff = newuser.is_active = 1
+                newuser.is_staff = 0
+                newuser.is_active = 1
                 newuser.is_superuser = 0
                 newuser.save()
                 newuser = auth.authenticate(username=username, password=pw1)
@@ -171,12 +185,12 @@ def problem_submit(req, proid):
     if req.method == 'GET':
         return ren2res("problem/problem_submit.html", req, {'problem': Problem.objects.get(proid=proid)})
     elif req.method == 'POST':
-        status = Status(userid=req.user.id, proid=proid, lang=req.POST.get('lang'), result='Waiting', 
+        status = Status(user=req.user, pro=Problem.objects.get(proid=proid), lang=req.POST.get('lang'), result='Waiting', 
             time=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
         if req.POST.get('code'):
             # f = open('JudgeFiles/source/' + str(sub.id), 'w')
             # f.write(req.POST.get('code'))
-            status.code = req.POST.get('code')
+            status.code = base64.b64encode(bytes(req.POST.get('code'), 'utf-8'))
         else:
             return ren2res("problem/problem_submit.html", req,
                            {'problem': Problem.objects.get(proid=proid), 'err': "No Submit!"})
@@ -189,15 +203,15 @@ def problem_submit(req, proid):
         return HttpResponseRedirect("/status/")
 
 def status(req):
-    proid = req.GET.get('proid')
-    if proid:
-        query = Status.objects.filter(proid=proid).all().order_by('-runid')
+    pro_id = req.GET.get('pro_id')
+    if pro_id:
+        query = Status.objects.filter(pro_id=pro_id).all().order_by('-runid')
     else:
         query = Status.objects.all().order_by('-runid')
 
     search = req.GET.get('search')
     if search:
-        query = query.filter(Q(pid__title__icontains=search) | Q(uid__username__icontains=search))
+        query = query.filter(Q(pro__title__icontains=search) | Q(user__username__icontains=search))
 
     #print(len(query))
 
@@ -213,7 +227,7 @@ def status(req):
     lst = query[(pg - 1) * LIST_NUMBER_EVERY_PAGE:pg * LIST_NUMBER_EVERY_PAGE]
     #print(len(lst))
 
-    return ren2res('status.html', req, {'proid': proid, 'page': range(start, end + 1), 'list': lst})
+    return ren2res('status.html', req, {'pro_id': pro_id, 'page': range(start, end + 1), 'list': lst })
 
 
 @login_required
@@ -247,3 +261,31 @@ def profile(req):
                 user.save()
                 return ren2res("login.html", req, {})
         return HttpResponseRedirect('/')
+
+@login_required
+def show_source(req):
+    solution_id = req.GET.get('solution_id')
+    query = Status.objects.filter(runid=solution_id)
+    if len(query) == 0:
+        raise Http404
+    elif query[0].user.id != req.user.id and not req.user.is_staff:
+        raise Http404
+    else:
+        status = query[0]
+        code = base64.b64decode(bytes(status.code, 'utf-8'))
+        '''
+        err = ""
+        try:
+            f = open('/home/sduacm/OnlineJudge/JudgeFiles/result/' + str(submit.id), 'r')
+            err = f.read()
+            f.close()
+        except IOError:
+            pass
+        err = err.replace("/tmp","...")
+        err = err.replace("/sduoj/source","")
+        print('error:')
+        print(err)
+        if err == '':
+            err = 'Successful'
+        '''
+        return ren2res('show_source.html', req, {'status': status, 'code': code, 'lang': LANG_DICT[status.lang]})

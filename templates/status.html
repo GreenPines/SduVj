@@ -28,17 +28,17 @@
          >
 	    <td><center>{{ item.runid }}</a></center></td>
             <td><center><a href="/problem/{{ item.pro.proid}}">{{ item.pro.title }}</a></center></td>
-            {% ifequal item.pid.isCCF True %}
+            {% ifequal item.pro.isCCF True %}
                  <td><center>{{ item.score }}</center></td>
-	    {% else %}
-		{% ifequal item.result "Compilation Error" %}
-		    {% ifequal item.uid.id user.id %}
-			    <td><center><a href="/show_source?solution_id={{ item.runid }}" target="_blank">{{ item.get_status_display }}</a></center></td>
-		    {% else %}
-			    <td><center>{{ item.result }}</center></td>
-		    {% endifequal %}
-                {% else %}
-		    <td><center>{{ item.result }}</center></td>
+	        {% else %}
+                {% ifequal item.result "Compilation Error" %}
+    		      {% ifequal item.uid.id user.id %}
+    			    <td><center><a href="/show_source?solution_id={{ item.runid }}" target="_blank">{{ item.get_status_display }}</a></center></td>
+    		      {% else %}
+    			    <td><center>{{ item.result }}</center></td>
+    		      {% endifequal %}
+                    {% else %}
+    		    <td><center>{{ item.result }}</center></td>
                 {% endifequal %}
             {% endifequal %}
 	    {% ifequal item.uid.id user.id %}
